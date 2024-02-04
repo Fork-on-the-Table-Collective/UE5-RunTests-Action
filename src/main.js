@@ -18,6 +18,15 @@ const readAndParseFile = async (filePath) => {
   return lines;
 };
 
+const readAndParseString = (testlistString) => {
+    const lines = [];
+    for (const line of testlistString.split("\n")) {
+      const values = line.split(",");
+      lines.push(values);
+    }
+    return lines;
+  };
+
 const createTestObject = (AllTests, subtests, line) => {
   if (!AllTests.hasOwnProperty(line[0])) {
     subtests = {};
@@ -36,7 +45,7 @@ const getAllTests = async (TestListFile, TestList) => {
       createTestObject(AllTests, subtests, line);
     });
   } else if (TestList) {
-    TestList.forEach((line) => {
+    readAndParseString(TestList).forEach((line) => {
       createTestObject(AllTests, subtests, line);
     });
   }
