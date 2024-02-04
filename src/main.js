@@ -40,11 +40,12 @@ const createTestObject = (AllTests, subtests, line) => {
 const getAllTests = async (TestListFile, TestList) => {
   let AllTests = {};
   let subtests = {};
-  if (TestListFile) {
-    (await readAndParseFile(TestListFile)).forEach((line) => {
-      createTestObject(AllTests, subtests, line);
-    });
-  } else if (TestList) {
+//   if (TestListFile) {
+//     (await readAndParseFile(TestListFile)).forEach((line) => {
+//       createTestObject(AllTests, subtests, line);
+//     });
+//   } else 
+  if (TestList) {
     readAndParseString(TestList).forEach((line) => {
       createTestObject(AllTests, subtests, line);
     });
