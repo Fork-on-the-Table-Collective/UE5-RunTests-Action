@@ -26658,7 +26658,7 @@ const getAllTests = async (TestListFile, TestList) => {
 };
 
 const command = (EnginePath, uprojectFile, test, currentPath) => {
-  return `${EnginePath}"\\Engine\\Binaries\\Win64\\UnrealEditor.exe" ${uprojectFile} -ExecCmds="Automation RunTest '${test};quit" -TestExit="Automation Test Queue Empty" -log -nosplash -Unattended -nopause -NullRHI -ReportOutputPath="${currentPath}\\test_results"`;
+  return `"${EnginePath}\\Engine\\Binaries\\Win64\\UnrealEditor.exe" ${uprojectFile} -ExecCmds="Automation RunTest ${test};quit" -TestExit="Automation Test Queue Empty" -log -nosplash -Unattended -nopause -NullRHI -ReportOutputPath="${currentPath}\\test_results"`;
 };
 
 const cleanString = (input) => {
