@@ -26608,8 +26608,6 @@ const fs2 = __nccwpck_require__(7147);
 const readline = __nccwpck_require__(4521);
 const execSync = (__nccwpck_require__(2081).execSync);
 
-
-
 const readAndParseFile = async (filePath) => {
   const lines = [];
   const fileStream = fs2.createReadStream(filePath);
@@ -26624,25 +26622,43 @@ const readAndParseFile = async (filePath) => {
   return lines;
 };
 
-const getAllTests = async (TestListFile) => {
+const readAndParseString = (testlistString) => {
+    const lines = [];
+    for (const line of testlistString.split("\n")) {
+      const values = line.split(",");
+      lines.push(values);
+    }
+    return lines;
+  };
+
+const createTestObject = (AllTests, subtests, line) => {
+  if (!AllTests.hasOwnProperty(line[0])) {
+    subtests = {};
+  }
+  subtests.hasOwnProperty(line[0] + "." + line[1])
+    ? subtests[line[0] + "." + line[1]].push(line.join("."))
+    : (subtests[line[0] + "." + line[1]] = [line.join(".")]);
+  AllTests[line[0]] = subtests;
+};
+
+const getAllTests = async (TestListFile, TestList) => {
   let AllTests = {};
   let subtests = {};
-  (await readAndParseFile(TestListFile)).forEach((line) => {
-    if (!AllTests.hasOwnProperty(line[0])) {
-      subtests = {};
-    }
-    subtests.hasOwnProperty(line[0] + "." + line[1])
-      ? subtests[line[0] + "." + line[1]].push(line.join("."))
-      : (subtests[line[0] + "." + line[1]] = [line.join(".")]);
-    AllTests[line[0]] = subtests;
-  });
+//   if (TestListFile) {
+//     (await readAndParseFile(TestListFile)).forEach((line) => {
+//       createTestObject(AllTests, subtests, line);
+//     });
+//   } else 
+  if (TestList) {
+    readAndParseString(TestList).forEach((line) => {
+      createTestObject(AllTests, subtests, line);
+    });
+  }
   return AllTests;
 };
 
-const command = (EnginePath,uprojectFile,test,currentPath) => {
-  return (
-    `${EnginePath}"\\Engine\\Binaries\\Win64\\UnrealEditor.exe" ${uprojectFile} -ExecCmds="Automation RunTest '${test};quit" -TestExit="Automation Test Queue Empty" -log -nosplash -Unattended -nopause -NullRHI -ReportOutputPath="${currentPath}\\test_results"`
-  );
+const command = (EnginePath, uprojectFile, test, currentPath) => {
+  return `${EnginePath}"\\Engine\\Binaries\\Win64\\UnrealEditor.exe" ${uprojectFile} -ExecCmds="Automation RunTest '${test};quit" -TestExit="Automation Test Queue Empty" -log -nosplash -Unattended -nopause -NullRHI -ReportOutputPath="${currentPath}\\test_results"`;
 };
 
 const cleanString = (input) => {
@@ -26666,12 +26682,12 @@ const loadJSON = async (jsonFilePath) => {
   }
 };
 
-const runTest = async (EnginePath,uprojectFile,test,currentPath, result) => {
+const runTest = async (EnginePath, uprojectFile, test, currentPath, result) => {
   console.log(`Running test: ${test}`);
   const logfile = currentPath + "\\test_results\\index.json";
   let isError = false;
   try {
-    const cmd = command(EnginePath,uprojectFile,test,currentPath);
+    const cmd = command(EnginePath, uprojectFile, test, currentPath);
     execSync(cmd);
     const obj = await loadJSON(logfile);
 
@@ -26707,6 +26723,7 @@ const main = async () => {
   const EnginePath = core.getInput("EnginePath");
   const uprojectFile = core.getInput("uprojectFile");
   const TestListFile = core.getInput("TestListFile");
+  const TestList = core.getInput("TestList");
   const currentPath = process.cwd();
   const result = {
     summary: {
@@ -26720,19 +26737,35 @@ const main = async () => {
     },
   };
   try {
-    const AllTests = await getAllTests(TestListFile);
+    const AllTests = await getAllTests(TestListFile,TestList);
     const MainTests = Object.keys(AllTests);
     await Promise.all(
       MainTests.map(async (MainTest) => {
-        if (await runTest(EnginePath,uprojectFile,MainTest,currentPath, result)) {
+        if (
+          await runTest(EnginePath, uprojectFile, MainTest, currentPath, result)
+        ) {
           const SubTests = Object.keys(AllTests[MainTest]);
           await Promise.all(
             SubTests.map(async (SubTest) => {
-              if (await runTest(EnginePath,uprojectFile,SubTest,currentPath, result)) {
+              if (
+                await runTest(
+                  EnginePath,
+                  uprojectFile,
+                  SubTest,
+                  currentPath,
+                  result
+                )
+              ) {
                 const ElementaryTests = AllTests[MainTest][SubTest];
                 await Promise.all(
                   ElementaryTests.map(async (ElementaryTest) => {
-                    await runTest(EnginePath,uprojectFile,ElementaryTest,currentPath, result);
+                    await runTest(
+                      EnginePath,
+                      uprojectFile,
+                      ElementaryTest,
+                      currentPath,
+                      result
+                    );
                   })
                 );
               }
@@ -26746,7 +26779,7 @@ const main = async () => {
     } else if (result.summary.failedTestset.length > 0) {
       core.setFailed(`Some tests run into error. ${result}`);
     } else {
-      console.log(JSON.stringify(result.summary,null,2))
+      console.log(JSON.stringify(result.summary, null, 2));
       core.setOutput("summary", result.summary);
     }
   } catch (error) {
