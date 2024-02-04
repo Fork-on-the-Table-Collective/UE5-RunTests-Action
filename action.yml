@@ -1,0 +1,21 @@
+name: 'Running UE5 tests'
+description: 'Runs tests on self-hosted runner with specific parameters'
+inputs:
+  EnginePath:
+    description: 'UE5 installation path'
+    required: true
+  uprojectFile:
+    description: 'Project file path'
+    required: true
+  TestListFile:
+    description: 'Path to the test list file'
+    required: false
+  TestList:
+    description: 'List of tests'
+    required: false
+outputs:
+  summary:
+    description: 'It will give back the summary report of all the tests'
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
