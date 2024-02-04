@@ -109,6 +109,7 @@ const runTest = async (EnginePath, uprojectFile, test, currentPath, result) => {
     result[test] = {
       errors: `Error executing Test: ${test}. Message: ${error.message}`,
     };
+    console.log(`Error executing Test: ${test}. Message: ${error.message}`)
     result.summary.failedTestset.push(test);
     isError = true;
   }
@@ -171,12 +172,12 @@ const main = async () => {
       })
     );
     if (result.summary.failed > 0 || result.summary.failedTestset.length > 0) {
-      core.setFailed(`Some tests failed. ${result}`);
+      core.setFailed(`Some tests failed. ${JSON.stringify(result,null,2)}`);
     } else if (result.summary.failedTestset.length > 0) {
-      core.setFailed(`Some tests run into error. ${result}`);
+      core.setFailed(`Some tests run into error. ${JSON.stringify(result,null,2)}`);
     } else {
       console.log(JSON.stringify(result.summary, null, 2));
-      core.setOutput("summary", result.summary);
+      core.setOutput("summary", JSON.stringify(result.summary, null, 2));
     }
   } catch (error) {
     core.setFailed(error.message);
