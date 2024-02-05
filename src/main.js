@@ -3,19 +3,6 @@ const fs = require("fs");
 const readline = require("readline");
 const execSync = require("child_process").execSync;
 
-const readAndParseFile = async (filePath) => {
-  const lines = [];
-  const fileStream = fs.createReadStream(filePath);
-  const rl = readline.createInterface({
-    input: fileStream,
-    crlfDelay: Infinity, // To handle both \r\n and \n line endings
-  });
-  for await (const line of rl) {
-    const values = line.split(",");
-    lines.push(values);
-  }
-  return lines;
-};
 
 const readAndParseString = (testlistString) => {
   const lines = [];
@@ -26,25 +13,24 @@ const readAndParseString = (testlistString) => {
   return lines;
 };
 
-const createTestObject = (AllTests, subtests, line) => {
-  if (!AllTests.hasOwnProperty(line[0])) {
-    subtests = {};
-  }
-  const subteststr=line.slice(0,2).join(".")
-  subtests.hasOwnProperty(subteststr)
-    ? subtests[subteststr].push(line.join("."))
-    : (subtests[subteststr] = [line.join(".")]);
-  AllTests[line[0]] = subtests;
-};
+function getAllTests(TestList) {
+  const AllTests = {};
 
-const getAllTests = (TestList) => {
-  let AllTests = {};
-  let subtests = {};
-  readAndParseString(TestList).forEach((line) => {
-    createTestObject(AllTests, subtests, line);
+  readAndParseString(TestList).forEach((subTestList) => {
+    const mainTest = subTestList[0];
+    const subTest = subTestList.slice(0, 2).join(".");
+    const elementaryTest = subTestList.join(".");
+
+    if (!(mainTest in AllTests)) {
+      AllTests[mainTest] = {};
+    }
+    subTest in AllTests[mainTest]
+      ? AllTests[mainTest][subTest].push(elementaryTest)
+      : (AllTests[mainTest][subTest] = [elementaryTest]);
   });
+
   return AllTests;
-};
+}
 
 const command = (EnginePath, uprojectFile, test, currentPath) => {
   return `"${EnginePath}\\Engine\\Binaries\\Win64\\UnrealEditor.exe" "${uprojectFile}" -ExecCmds="Automation RunTest ${test};quit" -TestExit="Automation Test Queue Empty" -log -nosplash -Unattended -nopause -NullRHI -ReportOutputPath="${currentPath}\\test_results"`;
@@ -150,10 +136,12 @@ const main = () => {
   try {
     const AllTests = getAllTests(TestList);
     const MainTests = Object.keys(AllTests);
-    console.log(`all fckg tests: ${MainTests}`)
+    console.log(`all fckg tests: ${MainTests}`);
     MainTests.forEach((MainTest) => {
-      const Subtests = AllTests[MainTest]
-      console.log(`Maintest: ${MainTest} subests: ${JSON.stringify(Subtests,null,2)}`)
+      const Subtests = AllTests[MainTest];
+      console.log(
+        `Maintest: ${MainTest} subests: ${JSON.stringify(Subtests, null, 2)}`
+      );
       runTest(
         EnginePath,
         uprojectFile,
