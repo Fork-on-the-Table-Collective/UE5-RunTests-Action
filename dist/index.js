@@ -26684,7 +26684,6 @@ const runTest = (
   result
 ) => {
   console.log(`Running test: ${test}`);
-  Console.log();
   const logfile = currentPath + "\\test_results\\index.json";
   try {
     const cmd = command(EnginePath, uprojectFile, test, currentPath);
