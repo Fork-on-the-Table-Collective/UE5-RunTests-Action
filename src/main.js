@@ -30,25 +30,19 @@ const createTestObject = (AllTests, subtests, line) => {
   if (!AllTests.hasOwnProperty(line[0])) {
     subtests = {};
   }
-  subtests.hasOwnProperty(line[0] + "." + line[1])
-    ? subtests[line[0] + "." + line[1]].push(line.join("."))
-    : (subtests[line[0] + "." + line[1]] = [line.join(".")]);
+  const subteststr=line.slice(0,2).join(".")
+  subtests.hasOwnProperty(subteststr)
+    ? subtests[subteststr].push(line.join("."))
+    : (subtests[subteststr] = [line.join(".")]);
   AllTests[line[0]] = subtests;
 };
 
-const getAllTests = (TestListFile, TestList) => {
+const getAllTests = (TestList) => {
   let AllTests = {};
   let subtests = {};
-  //   if (TestListFile) {
-  //     (await readAndParseFile(TestListFile)).forEach((line) => {
-  //       createTestObject(AllTests, subtests, line);
-  //     });
-  //   } else
-  if (TestList) {
-    readAndParseString(TestList).forEach((line) => {
-      createTestObject(AllTests, subtests, line);
-    });
-  }
+  readAndParseString(TestList).forEach((line) => {
+    createTestObject(AllTests, subtests, line);
+  });
   return AllTests;
 };
 
@@ -76,6 +70,7 @@ const loadJSON = (jsonFilePath) => {
     throw error;
   }
 };
+
 const runTest = (
   EnginePath,
   uprojectFile,
@@ -115,7 +110,7 @@ const runTest = (
       errors: `Error executing Test: ${test}. Message: ${error.message}`,
     };
     console.log(`Error executing Test: ${test}. Message: ${error.message}`);
-    
+
     if (Subtests === "") {
       result.summary.failedTestset.push(test);
     } else {
@@ -155,8 +150,9 @@ const main = () => {
     },
   };
   try {
-    const AllTests = getAllTests(TestListFile, TestList);
+    const AllTests = getAllTests(TestList);
     const MainTests = Object.keys(AllTests);
+    console.log(`all fckg tests: ${MainTests}`)
     MainTests.foreach((MainTest) => {
       runTest(
         EnginePath,
