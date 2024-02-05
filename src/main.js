@@ -117,7 +117,7 @@ const runTest = (
       const SubTestList = Array.isArray(Subtests)
         ? Subtests
         : Object.keys(Subtests);
-      SubTestList.foreach((SubTest) => {
+      SubTestList.forEach((SubTest) => {
         console.log(`Subtests: ${SubTestList}, Subtest:${SubTest}`);
         runTest(
           EnginePath,
@@ -152,7 +152,7 @@ const main = () => {
     const AllTests = getAllTests(TestList);
     const MainTests = Object.keys(AllTests);
     console.log(`all fckg tests: ${MainTests}`)
-    MainTests.foreach((MainTest) => {
+    MainTests.forEach((MainTest) => {
       runTest(
         EnginePath,
         uprojectFile,
