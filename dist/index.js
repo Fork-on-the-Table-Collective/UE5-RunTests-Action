@@ -26670,7 +26670,7 @@ const cleanString = (input) => {
   return output;
 };
 
-const loadJSON =  (jsonFilePath) => {
+const loadJSON = (jsonFilePath) => {
   try {
     const data = fs.readFileSync(jsonFilePath, "utf8");
     const obj = JSON.parse(cleanString(data));
@@ -26686,13 +26686,11 @@ const runTest = (
   currentPath,
   test,
   Subtests,
-  result,
-  isLastBefore = false,
-  isLast = false
+  result
 ) => {
   console.log(`Running test: ${test}`);
+  Console.log();
   const logfile = currentPath + "\\test_results\\index.json";
-  let isError = false;
   try {
     const cmd = command(EnginePath, uprojectFile, test, currentPath);
     execSync(cmd);
@@ -26721,39 +26719,26 @@ const runTest = (
       errors: `Error executing Test: ${test}. Message: ${error.message}`,
     };
     console.log(`Error executing Test: ${test}. Message: ${error.message}`);
-
-    if (isLast) {
+    
+    if (Subtests === "") {
       result.summary.failedTestset.push(test);
-    } else if (isLastBefore) {
-        Subtests.map((SubTest) => {
-          runTest(
-            EnginePath,
-            uprojectFile,
-            currentPath,
-            SubTest,
-            Subtests,
-            result,
-            (isLast = true)
-          );
-        })
     } else {
-      const SubTestList = Object.keys(Subtests);
-        SubTestList.map((SubTest) => {
-          const ElementaryTests = Subtests[SubTest];
-          runTest(
-            EnginePath,
-            uprojectFile,
-            currentPath,
-            SubTest,
-            ElementaryTests,
-            result,
-            (isLastBefore = true)
-          );
-        })
+      const SubTestList = Array.isArray(Subtests)
+        ? Subtests
+        : Object.keys(Subtests);
+      SubTestList.foreach((SubTest) => {
+        console.log(`Subtests: ${SubTestList}, Subtest:${SubTest}`);
+        runTest(
+          EnginePath,
+          uprojectFile,
+          currentPath,
+          SubTest,
+          Array.isArray(Subtests) ? "" : Subtests[SubTest],
+          result
+        );
+      });
     }
-    isError = true;
   }
-  // return isError;
 };
 
 const main = () => {
@@ -26776,16 +26761,16 @@ const main = () => {
   try {
     const AllTests = getAllTests(TestListFile, TestList);
     const MainTests = Object.keys(AllTests);
-      MainTests.map((MainTest) => {
-        runTest(
-          EnginePath,
-          uprojectFile,
-          currentPath,
-          MainTest,
-          AllTests[MainTest],
-          result
-        );
-      })
+    MainTests.foreach((MainTest) => {
+      runTest(
+        EnginePath,
+        uprojectFile,
+        currentPath,
+        MainTest,
+        AllTests[MainTest],
+        result
+      );
+    });
     if (result.summary.failed > 0 || result.summary.failedTestset.length > 0) {
       core.setFailed(`Some tests failed. ${JSON.stringify(result, null, 2)}`);
     } else if (result.summary.failedTestset.length > 0) {
