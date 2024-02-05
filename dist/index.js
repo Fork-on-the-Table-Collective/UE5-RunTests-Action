@@ -26681,13 +26681,14 @@ const loadJSON = async (jsonFilePath) => {
     throw error;
   }
 };
-
 const runTest = async (
   EnginePath,
   uprojectFile,
-  test,
   currentPath,
+  test,
+  Subtests,
   result,
+  isLastBefore = false,
   isLast = false
 ) => {
   console.log(`Running test: ${test}`);
@@ -26721,12 +26722,43 @@ const runTest = async (
       errors: `Error executing Test: ${test}. Message: ${error.message}`,
     };
     console.log(`Error executing Test: ${test}. Message: ${error.message}`);
+
     if (isLast) {
       result.summary.failedTestset.push(test);
+    } else if (isLastBefore) {
+      await Promise.all(
+        Subtests.map(async (SubTest) => {
+          await runTest(
+            EnginePath,
+            uprojectFile,
+            currentPath,
+            SubTest,
+            Subtests,
+            result,
+            (isLast = true)
+          );
+        })
+      );
+    } else {
+      const SubTestList = Object.keys(Subtests);
+      await Promise.all(
+        SubTestList.map(async (SubTest) => {
+          const ElementaryTests = Subtests[SubTest];
+          await runTest(
+            EnginePath,
+            uprojectFile,
+            currentPath,
+            SubTest,
+            ElementaryTests,
+            result,
+            (isLastBefore = true)
+          );
+        })
+      );
     }
     isError = true;
   }
-  return isError;
+  // return isError;
 };
 
 const main = async () => {
@@ -26749,43 +26781,17 @@ const main = async () => {
   try {
     const AllTests = await getAllTests(TestListFile, TestList);
     const MainTests = Object.keys(AllTests);
-    // await Promise.all(
-    MainTests.map(
-      async (MainTest) => {
-        if (
-          await runTest(EnginePath, uprojectFile, MainTest, currentPath, result)
-        ) {
-          const SubTests = Object.keys(AllTests[MainTest]);
-          // await Promise.all(
-          SubTests.map(async (SubTest) => {
-            if (
-              await runTest(
-                EnginePath,
-                uprojectFile,
-                SubTest,
-                currentPath,
-                result
-              )
-            ) {
-              const ElementaryTests = AllTests[MainTest][SubTest];
-              // await Promise.all(
-              ElementaryTests.map(async (ElementaryTest) => {
-                await runTest(
-                  EnginePath,
-                  uprojectFile,
-                  ElementaryTest,
-                  currentPath,
-                  result,
-                  true
-                );
-              });
-              // );
-            }
-          });
-          // );
-        }
-      }
-      // })
+    await Promise.all(
+      MainTests.map(async (MainTest) => {
+        await runTest(
+          EnginePath,
+          uprojectFile,
+          currentPath,
+          MainTest,
+          AllTests[MainTest],
+          result
+        );
+      })
     );
     if (result.summary.failed > 0 || result.summary.failedTestset.length > 0) {
       core.setFailed(`Some tests failed. ${JSON.stringify(result, null, 2)}`);
