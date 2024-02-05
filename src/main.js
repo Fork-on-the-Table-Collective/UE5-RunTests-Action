@@ -153,7 +153,7 @@ const main = () => {
     console.log(`all fckg tests: ${MainTests}`)
     MainTests.forEach((MainTest) => {
       const Subtests = AllTests[MainTest]
-      console.log(`Maintest: ${MainTest} subests: ${Subtests}`)
+      console.log(`Maintest: ${MainTest} subests: ${JSON.stringify(Subtests,null,2)}`)
       runTest(
         EnginePath,
         uprojectFile,
