@@ -103,7 +103,6 @@ const runTest = (
         ? Subtests
         : Object.keys(Subtests);
       SubTestList.forEach((SubTest) => {
-        console.log(`Subtests: ${SubTestList}, Subtest:${SubTest}`);
         runTest(
           EnginePath,
           uprojectFile,
@@ -136,12 +135,8 @@ const main = () => {
   try {
     const AllTests = getAllTests(TestList);
     const MainTests = Object.keys(AllTests);
-    console.log(`all fckg tests: ${MainTests}`);
     MainTests.forEach((MainTest) => {
       const Subtests = AllTests[MainTest];
-      console.log(
-        `Maintest: ${MainTest} subests: ${JSON.stringify(Subtests, null, 2)}`
-      );
       runTest(
         EnginePath,
         uprojectFile,
@@ -158,7 +153,6 @@ const main = () => {
         `Some tests run into error. ${JSON.stringify(result, null, 2)}`
       );
     } else {
-      console.log(JSON.stringify(result.summary, null, 2));
       core.setOutput("summary", JSON.stringify(result.summary, null, 2));
     }
   } catch (error) {
