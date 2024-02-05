@@ -26603,14 +26603,13 @@ var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
 (() => {
 const core = __nccwpck_require__(3722);
-const fs = (__nccwpck_require__(7147).promises);
-const fs2 = __nccwpck_require__(7147);
+const fs = __nccwpck_require__(7147);
 const readline = __nccwpck_require__(4521);
 const execSync = (__nccwpck_require__(2081).execSync);
 
 const readAndParseFile = async (filePath) => {
   const lines = [];
-  const fileStream = fs2.createReadStream(filePath);
+  const fileStream = fs.createReadStream(filePath);
   const rl = readline.createInterface({
     input: fileStream,
     crlfDelay: Infinity, // To handle both \r\n and \n line endings
@@ -26641,7 +26640,7 @@ const createTestObject = (AllTests, subtests, line) => {
   AllTests[line[0]] = subtests;
 };
 
-const getAllTests = async (TestListFile, TestList) => {
+const getAllTests = (TestListFile, TestList) => {
   let AllTests = {};
   let subtests = {};
   //   if (TestListFile) {
@@ -26671,9 +26670,9 @@ const cleanString = (input) => {
   return output;
 };
 
-const loadJSON = async (jsonFilePath) => {
+const loadJSON =  (jsonFilePath) => {
   try {
-    const data = await fs.readFile(jsonFilePath, "utf8");
+    const data = fs.readFileSync(jsonFilePath, "utf8");
     const obj = JSON.parse(cleanString(data));
     return obj;
   } catch (error) {
@@ -26681,7 +26680,7 @@ const loadJSON = async (jsonFilePath) => {
     throw error;
   }
 };
-const runTest = async (
+const runTest = (
   EnginePath,
   uprojectFile,
   currentPath,
@@ -26697,7 +26696,7 @@ const runTest = async (
   try {
     const cmd = command(EnginePath, uprojectFile, test, currentPath);
     execSync(cmd);
-    const obj = await loadJSON(logfile);
+    const obj = loadJSON(logfile);
 
     result[test] = {
       succeeded: obj.succeeded,
@@ -26726,9 +26725,8 @@ const runTest = async (
     if (isLast) {
       result.summary.failedTestset.push(test);
     } else if (isLastBefore) {
-      await Promise.all(
-        Subtests.map(async (SubTest) => {
-          await runTest(
+        Subtests.map((SubTest) => {
+          runTest(
             EnginePath,
             uprojectFile,
             currentPath,
@@ -26738,13 +26736,11 @@ const runTest = async (
             (isLast = true)
           );
         })
-      );
     } else {
       const SubTestList = Object.keys(Subtests);
-      await Promise.all(
-        SubTestList.map(async (SubTest) => {
+        SubTestList.map((SubTest) => {
           const ElementaryTests = Subtests[SubTest];
-          await runTest(
+          runTest(
             EnginePath,
             uprojectFile,
             currentPath,
@@ -26754,14 +26750,13 @@ const runTest = async (
             (isLastBefore = true)
           );
         })
-      );
     }
     isError = true;
   }
   // return isError;
 };
 
-const main = async () => {
+const main = () => {
   const EnginePath = core.getInput("EnginePath");
   const uprojectFile = core.getInput("uprojectFile");
   const TestListFile = core.getInput("TestListFile");
@@ -26779,11 +26774,10 @@ const main = async () => {
     },
   };
   try {
-    const AllTests = await getAllTests(TestListFile, TestList);
+    const AllTests = getAllTests(TestListFile, TestList);
     const MainTests = Object.keys(AllTests);
-    await Promise.all(
-      MainTests.map(async (MainTest) => {
-        await runTest(
+      MainTests.map((MainTest) => {
+        runTest(
           EnginePath,
           uprojectFile,
           currentPath,
@@ -26792,7 +26786,6 @@ const main = async () => {
           result
         );
       })
-    );
     if (result.summary.failed > 0 || result.summary.failedTestset.length > 0) {
       core.setFailed(`Some tests failed. ${JSON.stringify(result, null, 2)}`);
     } else if (result.summary.failedTestset.length > 0) {
