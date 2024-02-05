@@ -26756,12 +26756,14 @@ const main = () => {
     const MainTests = Object.keys(AllTests);
     console.log(`all fckg tests: ${MainTests}`)
     MainTests.forEach((MainTest) => {
+      const Subtests = AllTests[MainTest]
+      console.log(`Maintest: ${MainTest} subests: ${Subtests}`)
       runTest(
         EnginePath,
         uprojectFile,
         currentPath,
         MainTest,
-        AllTests[MainTest],
+        Subtests,
         result
       );
     });
