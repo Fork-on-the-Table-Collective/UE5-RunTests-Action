@@ -7,12 +7,9 @@ inputs:
   uprojectFile:
     description: 'Project file path'
     required: true
-  TestListFile:
-    description: 'Path to the test list file'
-    required: false
   TestList:
     description: 'List of tests'
-    required: false
+    required: true
 outputs:
   summary:
     description: 'It will give back the summary report of all the tests'

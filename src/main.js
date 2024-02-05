@@ -135,7 +135,6 @@ const runTest = (
 const main = () => {
   const EnginePath = core.getInput("EnginePath");
   const uprojectFile = core.getInput("uprojectFile");
-  const TestListFile = core.getInput("TestListFile");
   const TestList = core.getInput("TestList");
   const currentPath = process.cwd();
   const result = {
