@@ -26757,6 +26757,7 @@ const main = () => {
         `Some tests run into error. ${JSON.stringify(result, null, 2)}`
       );
     } else {
+      console.log(JSON.stringify(result.summary, null, 2));
       core.setOutput("summary", JSON.stringify(result.summary, null, 2));
     }
   } catch (error) {
