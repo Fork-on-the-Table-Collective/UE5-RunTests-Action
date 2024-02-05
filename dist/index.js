@@ -26749,41 +26749,43 @@ const main = async () => {
   try {
     const AllTests = await getAllTests(TestListFile, TestList);
     const MainTests = Object.keys(AllTests);
-    await Promise.all(
-      MainTests.map(async (MainTest) => {
+    // await Promise.all(
+    MainTests.map(
+      async (MainTest) => {
         if (
           await runTest(EnginePath, uprojectFile, MainTest, currentPath, result)
         ) {
           const SubTests = Object.keys(AllTests[MainTest]);
-          await Promise.all(
-            SubTests.map(async (SubTest) => {
-              if (
+          // await Promise.all(
+          SubTests.map(async (SubTest) => {
+            if (
+              await runTest(
+                EnginePath,
+                uprojectFile,
+                SubTest,
+                currentPath,
+                result
+              )
+            ) {
+              const ElementaryTests = AllTests[MainTest][SubTest];
+              // await Promise.all(
+              ElementaryTests.map(async (ElementaryTest) => {
                 await runTest(
                   EnginePath,
                   uprojectFile,
-                  SubTest,
+                  ElementaryTest,
                   currentPath,
-                  result
-                )
-              ) {
-                const ElementaryTests = AllTests[MainTest][SubTest];
-                await Promise.all(
-                  ElementaryTests.map(async (ElementaryTest) => {
-                    await runTest(
-                      EnginePath,
-                      uprojectFile,
-                      ElementaryTest,
-                      currentPath,
-                      result,
-                      true
-                    );
-                  })
+                  result,
+                  true
                 );
-              }
-            })
-          );
+              });
+              // );
+            }
+          });
+          // );
         }
-      })
+      }
+      // })
     );
     if (result.summary.failed > 0 || result.summary.failedTestset.length > 0) {
       core.setFailed(`Some tests failed. ${JSON.stringify(result, null, 2)}`);
