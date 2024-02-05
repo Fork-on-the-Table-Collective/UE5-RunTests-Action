@@ -19,13 +19,13 @@ const readAndParseFile = async (filePath) => {
 };
 
 const readAndParseString = (testlistString) => {
-    const lines = [];
-    for (const line of testlistString.split("\n")) {
-      const values = line.split(",");
-      lines.push(values);
-    }
-    return lines;
-  };
+  const lines = [];
+  for (const line of testlistString.split("\n")) {
+    const values = line.split(",");
+    lines.push(values);
+  }
+  return lines;
+};
 
 const createTestObject = (AllTests, subtests, line) => {
   if (!AllTests.hasOwnProperty(line[0])) {
@@ -40,11 +40,11 @@ const createTestObject = (AllTests, subtests, line) => {
 const getAllTests = async (TestListFile, TestList) => {
   let AllTests = {};
   let subtests = {};
-//   if (TestListFile) {
-//     (await readAndParseFile(TestListFile)).forEach((line) => {
-//       createTestObject(AllTests, subtests, line);
-//     });
-//   } else 
+  //   if (TestListFile) {
+  //     (await readAndParseFile(TestListFile)).forEach((line) => {
+  //       createTestObject(AllTests, subtests, line);
+  //     });
+  //   } else
   if (TestList) {
     readAndParseString(TestList).forEach((line) => {
       createTestObject(AllTests, subtests, line);
@@ -78,7 +78,14 @@ const loadJSON = async (jsonFilePath) => {
   }
 };
 
-const runTest = async (EnginePath, uprojectFile, test, currentPath, result) => {
+const runTest = async (
+  EnginePath,
+  uprojectFile,
+  test,
+  currentPath,
+  result,
+  isLast = false
+) => {
   console.log(`Running test: ${test}`);
   const logfile = currentPath + "\\test_results\\index.json";
   let isError = false;
@@ -109,8 +116,10 @@ const runTest = async (EnginePath, uprojectFile, test, currentPath, result) => {
     result[test] = {
       errors: `Error executing Test: ${test}. Message: ${error.message}`,
     };
-    console.log(`Error executing Test: ${test}. Message: ${error.message}`)
-    result.summary.failedTestset.push(test);
+    console.log(`Error executing Test: ${test}. Message: ${error.message}`);
+    if (isLast) {
+      result.summary.failedTestset.push(test);
+    }
     isError = true;
   }
   return isError;
@@ -134,7 +143,7 @@ const main = async () => {
     },
   };
   try {
-    const AllTests = await getAllTests(TestListFile,TestList);
+    const AllTests = await getAllTests(TestListFile, TestList);
     const MainTests = Object.keys(AllTests);
     await Promise.all(
       MainTests.map(async (MainTest) => {
@@ -161,7 +170,8 @@ const main = async () => {
                       uprojectFile,
                       ElementaryTest,
                       currentPath,
-                      result
+                      result,
+                      true
                     );
                   })
                 );
@@ -172,9 +182,11 @@ const main = async () => {
       })
     );
     if (result.summary.failed > 0 || result.summary.failedTestset.length > 0) {
-      core.setFailed(`Some tests failed. ${JSON.stringify(result,null,2)}`);
+      core.setFailed(`Some tests failed. ${JSON.stringify(result, null, 2)}`);
     } else if (result.summary.failedTestset.length > 0) {
-      core.setFailed(`Some tests run into error. ${JSON.stringify(result,null,2)}`);
+      core.setFailed(
+        `Some tests run into error. ${JSON.stringify(result, null, 2)}`
+      );
     } else {
       console.log(JSON.stringify(result.summary, null, 2));
       core.setOutput("summary", JSON.stringify(result.summary, null, 2));
